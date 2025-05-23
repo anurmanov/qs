@@ -10,7 +10,7 @@
   - Also
     - choco install gh
     - choco install git
-    - choco install golang
+    - choco install golang 
 
 ### git
 
