@@ -1,11 +1,11 @@
 name: System Tests
 
 on:
-#  push:
-#    branches: [main, master]
-#  pull_request:
-#    branches: [main, master]
-  workflow_dispatch:
+   push:
+     branches: [main, master]
+   pull_request:
+     branches: [main, master]
+   workflow_dispatch:
 
 jobs:
   system-tests:
@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-      max-parallel: 1  
+      max-parallel: 1
 
     steps:
       - name: Checkout code
@@ -30,6 +30,7 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      # ───────────────────────────────────────── Windows only ─────────────────────────────────────────
       - name: Install git on Windows
         if: runner.os == 'Windows'
         shell: pwsh
@@ -38,26 +39,13 @@ jobs:
             choco upgrade chocolatey -y
             choco install git -y --ignore-dependencies
           }
-      - name: Install git on Linux and macOS
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt update && sudo apt install git -y
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install git
-          fi
 
+      # ───────────────────────────────────────── Linux only ───────────────────────────────────────────
       - name: Install clipboard utility on Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y xclip
-
-      - name: Install qs
-        run: |
-          go install github.com/untillpro/qs@latest
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Configure git identity
         run: |
@@ -78,6 +66,36 @@ jobs:
             choco install gh
           fi
 
+      # ─────────────────────────────── Credential sanity checks ───────────────────────────────────────
+      - name: Check GitHub credentials (Linux/macOS)
+        if: runner.os != 'Windows'
+        env:
+          UPSTREAM_GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+          FORK_GH_TOKEN: ${{ secrets.FORK_GH_TOKEN }}
+          UPSTREAM_GH_ACCOUNT: ${{ secrets.UPSTREAM_GH_ACCOUNT }}
+          FORK_GH_ACCOUNT: ${{ secrets.FORK_GH_ACCOUNT }}
+        shell: bash
+        run: |
+          if [ -z "$UPSTREAM_GH_TOKEN" ] || [ -z "$FORK_GH_TOKEN" ] || [ -z "$UPSTREAM_GH_ACCOUNT" ] || [ -z "$FORK_GH_ACCOUNT" ]; then
+            echo "Missing GitHub credentials"
+            exit 1
+          fi
+
+      - name: Check GitHub credentials (Windows)
+        if: runner.os == 'Windows'
+        env:
+          UPSTREAM_GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+          FORK_GH_TOKEN: ${{ secrets.FORK_GH_TOKEN }}
+          UPSTREAM_GH_ACCOUNT: ${{ secrets.UPSTREAM_GH_ACCOUNT }}
+          FORK_GH_ACCOUNT: ${{ secrets.FORK_GH_ACCOUNT }}
+        shell: pwsh
+        run: |
+          if (-not $env:UPSTREAM_GH_TOKEN -or -not $env:FORK_GH_TOKEN -or -not $env:UPSTREAM_GH_ACCOUNT -or -not $env:FORK_GH_ACCOUNT) {
+            Write-Host "Missing GitHub credentials"
+            exit 1
+          }
+
+      # ─────────────────────────────────────────── Run tests ──────────────────────────────────────────
       - name: Run system tests
         env:
           UPSTREAM_GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
@@ -87,6 +105,10 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_TICKET_URL: ${{ secrets.JIRA_TICKET_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          GH_TIMEOUT_MS: ${{ env.GH_TIMEOUT_MS}}
+          GH_TIMEOUT_MS: ${{ env.GH_TIMEOUT_MS }}
+          QS_RETRY_DELAY_MS: ${{ env.QS_RETRY_DELAY_MS }}
+          QS_MAX_RETRY_DELAY_MS: ${{ env.QS_MAX_RETRY_DELAY_MS }}
+          QS_MAX_RETRIES: ${{ env.QS_MAX_RETRIES }}
+          QS_SKIP_QS_VERSION_CHECK: "true"
         run: |
           go test -v sys_test.go
