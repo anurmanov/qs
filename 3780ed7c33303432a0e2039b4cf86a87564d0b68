@@ -1,1 +1,3 @@
 Resolves issue 'Action `System tests` fails on macOS'
+
+Resolves #3883 Action `System tests` fails on macOS
