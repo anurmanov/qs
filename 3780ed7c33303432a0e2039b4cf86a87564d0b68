@@ -1,3 +1,5 @@
 Resolves issue 'Action `System tests` fails on macOS'
 
 Resolves #3883 Action `System tests` fails on macOS
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3883","jira_ticket_url":"","branch_type":1}
