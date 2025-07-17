@@ -1,1 +1,3 @@
 Resolves issue 'q/eliminate unnecessary error-level message `waiting for function to finish`'
+
+Resolves #3889 q/eliminate unnecessary error-level message `waiting for function to finish`
