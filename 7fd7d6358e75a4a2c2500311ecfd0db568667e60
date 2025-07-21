@@ -1,3 +1,5 @@
 Resolves issue 'q/`qs pr` does not print url of the created PR like it did before'
 
 Resolves #3899 q/`qs pr` does not print url of the created PR like it did before
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3899","jira_ticket_url":"","branch_type":1}
