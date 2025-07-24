@@ -1,3 +1,5 @@
 Resolves issue 'bug/`qs u` in pr branch does not ask for the good commit message'
 
 Resolves #3918 bug/`qs u` in pr branch does not ask for the good commit message
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3918","jira_ticket_url":"","branch_type":2}
