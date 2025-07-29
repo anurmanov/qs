@@ -1,1 +1,3 @@
 Resolves issue 'q/Compare versions semantically, avoid the version postfix'
+
+Resolves #3934 q/Compare versions semantically, avoid the version postfix
