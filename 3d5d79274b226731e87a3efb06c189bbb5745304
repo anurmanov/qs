@@ -1,3 +1,5 @@
 Resolves issue 'q/Compare versions semantically, avoid the version postfix'
 
 Resolves #3934 q/Compare versions semantically, avoid the version postfix
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3934","jira_ticket_url":"","branch_type":1}
