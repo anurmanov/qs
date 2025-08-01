@@ -9,8 +9,8 @@ const (
 	git                         = "git"
 	errFormatFailedToCloneRepos = "failed to open cloned repository: %w"
 	formatGithubTokenEnv        = "GITHUB_TOKEN=%s"
-	cloneRepoDirPerm		= 0755
-	commitFilePerm		= 0644
+	cloneRepoDirPerm            = 0755
+	commitFilePerm              = 0644
 	readmeMDFileName            = "README.md"
 	changeDirFlag               = "-C"
 )
@@ -53,6 +53,8 @@ const (
 	SyncStateBothChangedConflict
 	// SyncStateDoesntTrackOrigin means that the dev branch does not track the origin
 	SyncStateDoesntTrackOrigin
+	// SyncStateCloneIsAheadOfFork means that the clone repo is ahead of the fork repo
+	SyncStateCloneIsAheadOfFork
 )
 
 const (
@@ -120,3 +122,15 @@ func (s SyncState) String() string {
 		return "unknown"
 	}
 }
+
+type BranchState int
+
+const (
+	BranchStateNotExists BranchState = iota
+	BranchStateExists
+	BranchStateExistsPushed
+	BranchStateExistsPushedPRCreated
+	BranchStateExistsPRCreated
+	BranchStateExistsPushedPRMerged
+	BranchStateExistsPRMerged
+)

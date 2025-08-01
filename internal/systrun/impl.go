@@ -51,6 +51,10 @@ func (st *SystemTest) checkPrerequisites() error {
 
 // checkCommand validates the command to be executed
 func (st *SystemTest) checkCommand() error {
+	if st.cfg.CommandConfig == nil {
+		return nil
+	}
+
 	switch st.cfg.CommandConfig.Command {
 	case commands.CommandNameFork,
 		commands.CommandNameDev,
@@ -402,7 +406,7 @@ func (st *SystemTest) getCustomClipboardContent() string {
 func (st *SystemTest) createGitHubIssue() (string, error) {
 	// Create issue title based on test ID
 	issueTitle := fmt.Sprintf("Test automation issue for %s", st.cfg.TestID)
-	
+
 	var output []byte
 	// Run gh issue create command
 	err := helper.Retry(func() error {
@@ -416,7 +420,7 @@ func (st *SystemTest) createGitHubIssue() (string, error) {
 			fmt.Sprintf(formatGithubTokenEnv, st.cfg.GHConfig.UpstreamToken))
 
 		output, err = cmd.Output()
-		
+
 		return err
 	})
 	if err != nil {
@@ -832,7 +836,11 @@ func (st *SystemTest) setupDevBranch() error {
 }
 
 // runCommand executes the specified qs command and captures stdout and stderr
-func (st *SystemTest) runCommand(cmdCfg CommandConfig) (stdout string, stderr string, err error) {
+func (st *SystemTest) runCommand(cmdCfg *CommandConfig) (stdout string, stderr string, err error) {
+	if cmdCfg == nil {
+		return "", "", nil
+	}
+
 	stdoutReader, stdoutWriter, err := os.Pipe()
 	if err != nil {
 		// notestdept
@@ -953,17 +961,71 @@ func (st *SystemTest) processSyncState() error {
 	case SyncStateUnspecified:
 		return nil
 	case SyncStateUncommitedChangesInClone:
-		return st.setSyncState(false, true, true, false, "")
+		return st.setSyncState(
+			false,
+			true,
+			true,
+			0,
+			false,
+			"",
+		)
 	case SyncStateSynchronized:
-		return st.setSyncState(true, true, true, false, "")
+		return st.setSyncState(
+			true,
+			true,
+			true,
+			0,
+			false,
+			"",
+		)
 	case SyncStateCloneChanged:
-		return st.setSyncState(true, true, false, false, "")
+		return st.setSyncState(
+			true,
+			true,
+			false,
+			0,
+			false,
+			"",
+		)
 	case SyncStateForkChanged:
-		return st.setSyncState(false, false, false, true, headerOfFilesInAnotherClone, 4)//nolint:revive
+		return st.setSyncState(
+			false,
+			false,
+			false,
+			0,
+			true,
+			headerOfFilesInAnotherClone,
+			4,
+		) //nolint:revive
 	case SyncStateBothChanged:
-		return st.setSyncState(true, true, false, true, headerOfFilesInAnotherClone, 4)//nolint:revive
+		return st.setSyncState(
+			true,
+			true,
+			false,
+			0,
+			true,
+			headerOfFilesInAnotherClone,
+			4,
+		) //nolint:revive
 	case SyncStateBothChangedConflict:
-		return st.setSyncState(true, true, false, true, headerOfFilesInAnotherClone, 3)//nolint:revive
+		return st.setSyncState(
+			true,
+			true,
+			false,
+			0,
+			true,
+			headerOfFilesInAnotherClone,
+			3,
+		) //nolint:revive
+	case SyncStateCloneIsAheadOfFork:
+		return st.setSyncState(
+			true,
+			true,
+			true,
+			2,
+			false,
+			"",
+		)
 	default:
 		return fmt.Errorf("not supported yet sync state: %s", st.cfg.SyncState)
 	}
@@ -981,6 +1043,7 @@ func (st *SystemTest) setSyncState(
 	needToCommit bool,
 	needChangeClone bool,
 	needSync bool,
+	numberOfCommitsInCloneAfterSync int,
 	needChangeFork bool,
 	headerOfFilesInFork string,
 	idFilesInFork ...int,
@@ -991,7 +1054,6 @@ func (st *SystemTest) setSyncState(
 
 	// Set the expected dev branch name that will be used later for PR
 	createdGithubIssueURL, _ := st.ctx.Value(contextPkg.CtxKeyCreatedGithubIssueURL).(string)
-
 	jiraTicket, _ := st.ctx.Value(contextPkg.CtxKeyJiraTicket).(string)
 	if createdGithubIssueURL == "" && jiraTicket == "" {
 		return errors.New("a Jira ticket or GitHub issue must be use to create dev branch")
@@ -1002,7 +1064,7 @@ func (st *SystemTest) setSyncState(
 		return err
 	}
 
-	stdout, stderr, err := st.runCommand(CommandConfig{
+	stdout, stderr, err := st.runCommand(&CommandConfig{
 		Command: "dev",
 		Stdin:   "y",
 	})
@@ -1012,9 +1074,10 @@ func (st *SystemTest) setSyncState(
 
 	logger.Verbose(stdout)
 
+	idOfFilesToCommitInClone := []int{1, 2, 3} // Default file IDs to commit in clone
 	if needChangeClone {
 		// Create 3 commits with different files
-		if err := commitFiles(st.cloneRepoPath, needToCommit, "", 1, 2, 3); err != nil {//nolint:revive
+		if err := commitFiles(st.cloneRepoPath, needToCommit, "", idOfFilesToCommitInClone...); err != nil { //nolint:revive
 			return err
 		}
 	}
@@ -1037,6 +1100,17 @@ func (st *SystemTest) setSyncState(
 			return nil
 		}) // Retry up to 3 times for pushing dev branch
 		if err != nil {
+			return err
+		}
+	}
+
+	// Create some commits in clone repo after sync
+	idOfFilesToCommitAfterSync := []int{} // Default file IDs to commit in clone after sync
+	for i := 1; i <= numberOfCommitsInCloneAfterSync; i++ {
+		idOfFilesToCommitAfterSync = append(idOfFilesToCommitAfterSync, i+len(idOfFilesToCommitInClone)) // Start from 4.txt if 1.txt, 2.txt, 3.txt were already commited
+	}
+	if len(idOfFilesToCommitAfterSync) > 0 {
+		if err := commitFiles(st.cloneRepoPath, needToCommit, "", idOfFilesToCommitAfterSync...); err != nil { //nolint:revive
 			return err
 		}
 	}
@@ -1214,6 +1288,12 @@ func (st *SystemTest) Run() error {
 		}
 	}
 
+	if st.cfg.DeleteBranchesAfterRunningCommand {
+		if err := st.deleteBranchesAfterTest(); err != nil {
+			return err
+		}
+	}
+
 	if err := st.validateStdout(stdout); err != nil {
 		return err
 	}
@@ -1225,6 +1305,19 @@ func (st *SystemTest) Run() error {
 	if err := st.cleanupTestEnvironment(); err != nil {
 		return err
 	}
+
+	return err
+}
+
+func (st *SystemTest) deleteBranchesAfterTest() error {
+	runDir := st.cloneRepoPath
+	if st.cfg.RunCommandFromAnotherClone && st.anotherCloneRepoPath != "" {
+		runDir = st.anotherCloneRepoPath
+	}
+
+	qsArgs := []string{"qs", "dev", "-d", changeDirFlag, runDir}
+	// run the `qs dev-d` command
+	_, err := st.qsExecRootCmd(st.ctx, qsArgs)
 
 	return err
 }

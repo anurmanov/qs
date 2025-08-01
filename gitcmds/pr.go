@@ -100,12 +100,12 @@ func Pr(wd string, needDraft bool) error {
 	}
 
 	// Check whether PR already exists
-	prExists, _, _, _, err := DoesPrExist(wd, parentRepoName, currentBranchName, PRStateOpen)
+	prInfo, _, _, err := DoesPrExist(wd, parentRepoName, currentBranchName, PRStateOpen)
 	if err != nil {
 		return err
 	}
-	if prExists {
-		fmt.Fprintln(os.Stdout, "pull request already exists for this branch")
+	if prInfo != nil {
+		_, _ = fmt.Fprintln(os.Stdout, "pull request already exists for this branch")
 
 		return nil
 	}
@@ -181,18 +181,16 @@ func pushPRBranch(wd, prBranchName string) error {
 
 // DoesPrExist checks if a pull request exists for the current branch.
 // Returns:
-// - true if PR exists
 // - PRInfo object if PR exists, nil otherwise
 // - stdout from the command execution
 // - stderr from the command execution
 // - error if any
-func DoesPrExist(wd, parentRepo, currentBranchName string, prState PRState) (bool, *PRInfo, string, string, error) {
+func DoesPrExist(wd, parentRepo, currentBranchName string, prState PRState) (*PRInfo, string, string, error) {
 	var (
-		prExists bool
-		prInfo   PRInfo
-		stdout   string
-		stderr   string
-		err      error
+		prInfo PRInfo
+		stdout string
+		stderr string
+		err    error
 	)
 
 	err = helper.Retry(func() error {
@@ -221,16 +219,12 @@ func DoesPrExist(wd, parentRepo, currentBranchName string, prState PRState) (boo
 		}
 
 		if strings.Contains(stdout, "no pull requests match your search") {
-			prExists = false
-
 			return nil
 		}
 
 		// Otherwise, assume PR exists
 		if stdout == "" {
 			// safety check: gh may sometimes return nothing at all
-			prExists = false
-
 			return nil
 		}
 		var infos []PRInfo
@@ -240,16 +234,15 @@ func DoesPrExist(wd, parentRepo, currentBranchName string, prState PRState) (boo
 		if len(infos) > 0 {
 			prInfo.URL = strings.TrimSpace(infos[0].URL)
 			prInfo.Title = strings.TrimSpace(infos[0].Title)
-			prExists = true
 		}
 
 		return nil
 	})
 	if err != nil {
-		return false, nil, stdout, stderr, err
+		return nil, stdout, stderr, err
 	}
 
-	return prExists, &prInfo, stdout, stderr, nil
+	return &prInfo, stdout, stderr, nil
 }
 
 func RemoveBranch(wd, branchName string) error {
@@ -454,11 +447,11 @@ func GetIssueDescription(issueURL string) (string, error) {
 	}
 
 	urlParts := strings.Split(repoURL, "/")
-	if len(urlParts) < 5 {//nolint:revive
+	if len(urlParts) < 5 { //nolint:revive
 		return "", fmt.Errorf("invalid GitHub URL format: %s", repoURL)
 	}
-	owner := urlParts[3]//nolint:revive
-	repo := urlParts[4]//nolint:revive
+	owner := urlParts[3] //nolint:revive
+	repo := urlParts[4]  //nolint:revive
 
 	// Use gh CLI to get issue details in JSON format with retry logic
 	var issueData struct {

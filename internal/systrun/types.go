@@ -34,7 +34,7 @@ type SystemTest struct {
 type TestConfig struct {
 	TestID        string
 	GHConfig      GithubConfig
-	CommandConfig CommandConfig
+	CommandConfig *CommandConfig
 	UpstreamState RemoteState
 	ForkState     RemoteState
 	// e.g. if SyncState is SyncStateSynchronized then do nothing more
@@ -44,6 +44,9 @@ type TestConfig struct {
 	ClipboardContent           ClipboardContentType // Content to be set in clipboard before running the test
 	RunCommandFromAnotherClone bool                 //
 	NeedCollaboration          bool
+
+	// TODO: eliminate it. Use BranchesState enum for creating potentially deletable branches
+	DeleteBranchesAfterRunningCommand bool // if true then `qs dev -d` command will be executed after the test
 	// If ExpectedStderr is not empty then check exit code of qs it must be != 0
 	ExpectedStderr string
 	ExpectedStdout string
@@ -400,7 +403,7 @@ func ExpectationPRCreated(ctx context.Context) error {
 	}
 	// Use gh CLI to check if PR exists with retry logic
 
-	prExists, prInfo, _, _, err := gitcmds.DoesPrExist(
+	prInfo, _, _, err := gitcmds.DoesPrExist(
 		cloneRepoPath,
 		fmt.Sprintf("%s/%s", owner, repoName),
 		expectedPRBranch,
@@ -409,7 +412,7 @@ func ExpectationPRCreated(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if !prExists {
+	if prInfo == nil {
 		return fmt.Errorf("PR branch %s does not exist on upstream remote", expectedPRBranch)
 	}
 
@@ -562,6 +565,140 @@ func ExpectationNotesDownloaded(ctx context.Context) error {
 
 	if notesObj.BranchType != notesPkg.BranchTypeDev {
 		return fmt.Errorf("notes downloaded but branch type is not dev")
+	}
+
+	return nil
+}
+
+// ExpectationOneLocalBranch checks if there is exactly one local branch in the clone repo
+func ExpectationOneLocalBranch(ctx context.Context) error {
+	cloneRepoPath := ctx.Value(contextCfg.CtxKeyCloneRepoPath).(string)
+	if cloneRepoPath == "" {
+		return errCloneRepoPathNotFoundInContext
+	}
+
+	// Get local branches
+	stdout, stderr, err := new(goUtilsExec.PipedExec).
+		Command(git, "branch", "--format", "%(refname:short)").
+		WorkingDir(cloneRepoPath).
+		RunToStrings()
+
+	if err != nil {
+		return fmt.Errorf("failed to list local branches: %w, stderr: %s", err, stderr)
+	}
+
+	// Count branches
+	branches := strings.Split(strings.TrimSpace(stdout), "\n")
+	// Filter out empty entries
+	var count int
+	for _, b := range branches {
+		if strings.TrimSpace(b) != "" {
+			count++
+		}
+	}
+
+	if count != 1 {
+		return fmt.Errorf("expected 1 local branch, but found %d", count)
+	}
+
+	return nil
+}
+
+// ExpectationTwoLocalBranches checks if there are exactly two local branches in the clone repo
+func ExpectationTwoLocalBranches(ctx context.Context) error {
+	cloneRepoPath := ctx.Value(contextCfg.CtxKeyCloneRepoPath).(string)
+	if cloneRepoPath == "" {
+		return errCloneRepoPathNotFoundInContext
+	}
+
+	// Get local branches
+	stdout, stderr, err := new(goUtilsExec.PipedExec).
+		Command(git, "branch", "--format", "%(refname:short)").
+		WorkingDir(cloneRepoPath).
+		RunToStrings()
+
+	if err != nil {
+		return fmt.Errorf("failed to list local branches: %w, stderr: %s", err, stderr)
+	}
+
+	// Count branches
+	branches := strings.Split(strings.TrimSpace(stdout), "\n")
+	// Filter out empty entries
+	var count int
+	for _, b := range branches {
+		if strings.TrimSpace(b) != "" {
+			count++
+		}
+	}
+
+	if count != 2 {
+		return fmt.Errorf("expected 2 local branches, but found %d", count)
+	}
+
+	return nil
+}
+
+// ExpectationOneRemoteBranch checks if there is exactly one remote branch in the origin remote
+func ExpectationOneRemoteBranch(ctx context.Context) error {
+	cloneRepoPath := ctx.Value(contextCfg.CtxKeyCloneRepoPath).(string)
+	if cloneRepoPath == "" {
+		return errCloneRepoPathNotFoundInContext
+	}
+
+	// Get remote branches from origin only
+	stdout, stderr, err := new(goUtilsExec.PipedExec).
+		Command(git, "branch", "-r", "--format", "%(refname:short)").
+		WorkingDir(cloneRepoPath).
+		RunToStrings()
+
+	if err != nil {
+		return fmt.Errorf("failed to list remote branches: %w, stderr: %s", err, stderr)
+	}
+
+	// Count origin branches
+	branches := strings.Split(strings.TrimSpace(stdout), "\n")
+	var count int
+	for _, b := range branches {
+		if strings.TrimSpace(b) != "" && strings.HasPrefix(b, "origin/") && b != "origin/HEAD" {
+			count++
+		}
+	}
+
+	if count != 1 {
+		return fmt.Errorf("expected 1 remote branch in origin, but found %d", count)
+	}
+
+	return nil
+}
+
+// ExpectationTwoRemoteBranches checks if there are exactly two remote branches in the origin remote
+func ExpectationTwoRemoteBranches(ctx context.Context) error {
+	cloneRepoPath := ctx.Value(contextCfg.CtxKeyCloneRepoPath).(string)
+	if cloneRepoPath == "" {
+		return errCloneRepoPathNotFoundInContext
+	}
+
+	// Get remote branches from origin only
+	stdout, stderr, err := new(goUtilsExec.PipedExec).
+		Command(git, "branch", "-r", "--format", "%(refname:short)").
+		WorkingDir(cloneRepoPath).
+		RunToStrings()
+
+	if err != nil {
+		return fmt.Errorf("failed to list remote branches: %w, stderr: %s", err, stderr)
+	}
+
+	// Count origin branches
+	branches := strings.Split(strings.TrimSpace(stdout), "\n")
+	var count int
+	for _, b := range branches {
+		if strings.TrimSpace(b) != "" && strings.HasPrefix(b, "origin/") && b != "origin/HEAD" {
+			count++
+		}
+	}
+
+	if count != 2 {
+		return fmt.Errorf("expected 2 remote branches in origin, but found %d", count)
 	}
 
 	return nil

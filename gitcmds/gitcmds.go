@@ -544,7 +544,7 @@ func GetBranchesWithRemoteTracking(wd, remoteName string) ([]string, error) {
 	stdout, stderr, err := new(exec.PipedExec).
 		Command(git, "branch", "-vv").
 		WorkingDir(wd).
-		Command("awk", fmt.Sprintf("$3 ~ /\\[%s.*\\]/ {print $1}", remoteName)).
+		Command("awk", fmt.Sprintf("$3 ~ /\\[%s\\/([A-Za-z0-9-_\\.\\/]*)[: gone]*\\]/ {print $1}", remoteName)).
 		RunToStrings()
 	if err != nil {
 		logger.Verbose(stderr)
@@ -1045,8 +1045,8 @@ func SyncMainBranch(wd string) error {
 	return nil
 }
 
-// getBranchTypeByName returns branch type based on branch name
-func getBranchTypeByName(branchName string) notesPkg.BranchType {
+// GetBranchTypeByName returns branch type based on branch name
+func GetBranchTypeByName(branchName string) notesPkg.BranchType {
 	switch {
 	case strings.HasSuffix(branchName, "-dev"):
 		return notesPkg.BranchTypeDev
@@ -1138,7 +1138,7 @@ func GetBranchType(wd string) (notesPkg.BranchType, error) {
 		}
 	}
 
-	return getBranchTypeByName(currentBranchName), nil
+	return GetBranchTypeByName(currentBranchName), nil
 }
 
 // isOldStyledBranch checks if branch is old styled
@@ -1721,11 +1721,11 @@ func createPR(wd, parentRepoName, prBranchName string, notes []string, asDraft b
 		return stdout, stderr, err
 	}
 
-	prExists, prInfo, stdout, stderr, err := DoesPrExist(wd, parentRepoName, prBranchName, PRStateOpen)
+	prInfo, stdout, stderr, err := DoesPrExist(wd, parentRepoName, prBranchName, PRStateOpen)
 	if err != nil {
 		return stdout, stderr, err
 	}
-	if !prExists {
+	if prInfo == nil {
 		return stdout, stderr, errors.New("PR not created")
 	}
 	// print PR URL

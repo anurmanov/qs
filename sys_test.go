@@ -16,7 +16,7 @@ func TestFork_OnExistingFork(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "fork",
 		},
 		UpstreamState:  systrun.RemoteStateOK,
@@ -38,7 +38,7 @@ func TestFork(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "fork",
 		},
 		UpstreamState: systrun.RemoteStateOK,
@@ -58,7 +58,7 @@ func TestFork_NoRemotes(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "fork",
 		},
 		UpstreamState:  systrun.RemoteStateNull,
@@ -78,7 +78,7 @@ func TestDev_CustomName(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Stdin:   "y",
 		},
@@ -103,7 +103,7 @@ func TestDev_NoUpstream_CustomName(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Args:    []string{"--no-fork"},
 			Stdin:   "y",
@@ -130,7 +130,7 @@ func TestDev_ExistingBranch(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Args:    []string{branchName},
 			Stdin:   "y",
@@ -156,7 +156,7 @@ func TestDev_NoFork_ExistingIssue(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: ghConfig,
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Args:    []string{"--no-fork"},
 			Stdin:   "y",
@@ -184,7 +184,7 @@ func TestPR_FromOtherClone(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: ghConfig,
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "pr",
 		},
 		UpstreamState:              systrun.RemoteStateOK,
@@ -209,7 +209,7 @@ func TestDev_NoFork_NonExistingIssue(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: ghConfig,
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Args:    []string{"--no-fork"},
 			Stdin:   "y",
@@ -232,7 +232,7 @@ func TestDev_NoFork_JiraTicketURL(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "dev",
 			Args:    []string{"--no-fork"},
 			Stdin:   "y",
@@ -255,7 +255,7 @@ func TestPR_Synchronized(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "pr",
 		},
 		UpstreamState:     systrun.RemoteStateOK,
@@ -278,7 +278,7 @@ func TestPR_FromJiraTicket(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "pr",
 		},
 		UpstreamState:     systrun.RemoteStateOK,
@@ -300,7 +300,7 @@ func TestPR_ForkChanged(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "pr",
 		},
 		UpstreamState:     systrun.RemoteStateOK,
@@ -323,7 +323,7 @@ func TestDownload(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "d",
 		},
 		UpstreamState:     systrun.RemoteStateOK,
@@ -349,7 +349,7 @@ func TestUpload(t *testing.T) {
 	testConfig := &systrun.TestConfig{
 		TestID:   strings.ToLower(t.Name()),
 		GHConfig: getGithubConfig(t),
-		CommandConfig: systrun.CommandConfig{
+		CommandConfig: &systrun.CommandConfig{
 			Command: "u",
 		},
 		UpstreamState:     systrun.RemoteStateOK,
@@ -364,6 +364,74 @@ func TestUpload(t *testing.T) {
 	err := sysTest.Run()
 	require.NoError(err)
 }
+
+func TestDev_D_SynchBranches_NoPR(t *testing.T) {
+	require := require.New(t)
+
+	testConfig := &systrun.TestConfig{
+		TestID:                            strings.ToLower(t.Name()),
+		GHConfig:                          getGithubConfig(t),
+		CommandConfig: {}
+		UpstreamState:                     systrun.RemoteStateOK,
+		ForkState:                         systrun.RemoteStateOK,
+		SyncState:                         systrun.SyncStateSynchronized,
+		DeleteBranchesAfterRunningCommand: true,
+		Expectations: []systrun.ExpectationFunc{
+			systrun.ExpectationTwoLocalBranches,
+			systrun.ExpectationTwoRemoteBranches,
+		},
+	}
+
+	sysTest := systrun.New(t, testConfig)
+	err := sysTest.Run()
+	require.NoError(err)
+}
+
+//func TestDev_D_SynchBranches_NoPR(t *testing.T) {
+//	require := require.New(t)
+//
+//	testConfig := &systrun.TestConfig{
+//		TestID:                            strings.ToLower(t.Name()),
+//		GHConfig:                          getGithubConfig(t),
+//		UpstreamState:                     systrun.RemoteStateOK,
+//		ForkState:                         systrun.RemoteStateOK,
+//		SyncState:                         systrun.Sync,
+//		DeleteBranchesAfterRunningCommand: true,
+//		Expectations: []systrun.ExpectationFunc{
+//			systrun.ExpectationTwoLocalBranches,
+//			systrun.ExpectationTwoRemoteBranches,
+//		},
+//	}
+//
+//	sysTest := systrun.New(t, testConfig)
+//	err := sysTest.Run()
+//	require.NoError(err)
+//}
+//
+//func TestDev_D_SynchBranches_PR(t *testing.T) {
+//	require := require.New(t)
+//
+//	testConfig := &systrun.TestConfig{
+//		TestID:   strings.ToLower(t.Name()),
+//		GHConfig: getGithubConfig(t),
+//		CommandConfig: &systrun.CommandConfig{
+//			Command: "pr",
+//		},
+//		UpstreamState:                     systrun.RemoteStateOK,
+//		ForkState:                         systrun.RemoteStateOK,
+//		SyncState:                         systrun.SyncStateSynchronized,
+//		ClipboardContent:                  systrun.ClipboardContentGithubIssue,
+//		DeleteBranchesAfterRunningCommand: true,
+//		Expectations: []systrun.ExpectationFunc{
+//			systrun.ExpectationOneLocalBranches,
+//			systrun.ExpectationOneRemoteBranches,
+//		},
+//	}
+//
+//	sysTest := systrun.New(t, testConfig)
+//	err := sysTest.Run()
+//	require.NoError(err)
+//}
 
 // getGithubConfig retrieves GitHub credentials from environment variables
 // and skips the test if any credentials are missing
