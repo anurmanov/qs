@@ -1,1 +1,3 @@
 Resolves issue 'bug/`qs dev -d` does not delete the `dev` branch'
+
+Resolves #3931 bug/`qs dev -d` does not delete the `dev` branch
