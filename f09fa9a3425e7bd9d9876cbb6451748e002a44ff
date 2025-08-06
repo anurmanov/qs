@@ -1,3 +1,5 @@
 Resolves issue 'bug/`qs dev -d` MUST get approve from me before deleting branches'
 
 Resolves #3970 bug/`qs dev -d` MUST get approve from me before deleting branches
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3970","jira_ticket_url":"","branch_type":1}
