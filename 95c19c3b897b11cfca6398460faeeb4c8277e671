@@ -1,3 +1,5 @@
 Resolves issue 'sys_tests.yml: do not run on main after pr merged'
 
 Resolves #3952 sys_tests.yml: do not run on main after pr merged
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/3952","jira_ticket_url":"","branch_type":1}
