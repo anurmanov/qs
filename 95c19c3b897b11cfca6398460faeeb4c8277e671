@@ -1,1 +1,3 @@
 Resolves issue 'sys_tests.yml: do not run on main after pr merged'
+
+Resolves #3952 sys_tests.yml: do not run on main after pr merged
