@@ -1,1 +1,3 @@
 Resolves issue 'qs: status must show delta for changed files and increase of files in summary'
+
+Resolves #3990 qs: status must show delta for changed files and increase of files in summary
