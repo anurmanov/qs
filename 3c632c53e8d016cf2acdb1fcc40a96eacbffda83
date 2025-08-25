@@ -5,3 +5,5 @@ pull request title: server/design/vvm/md update: partitions Actualizers and Sche
 Resolves #4014 bug/`qs pr` without issue failed
 
 pull request title: server/design/vvm/md update: partitions Actualizers and Schedulers diagram added
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/4014","jira_ticket_url":"","branch_type":2}
