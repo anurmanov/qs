@@ -1,3 +1,5 @@
 Resolves issue 'bug/`qs pr` without issue failed
 
 pull request title: server/design/vvm/md update: partitions Actualizers and Schedulers diagram added'
+
+Resolves #4014 bug/`qs pr` without issue failed
