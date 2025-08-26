@@ -1,1 +1,3 @@
 Resolves issue 'bug/qs does not work when it runs not in main repo folder'
+
+Resolves #4015 bug/qs does not work when it runs not in main repo folder
