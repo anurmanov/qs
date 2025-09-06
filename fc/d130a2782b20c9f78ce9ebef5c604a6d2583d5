@@ -1,3 +1,5 @@
 Resolves issue 'qs pr fails if JIRA_API_TOKEN is not set for Jira ticket based dev-branch'
 
 Resolves #4067 qs pr fails if JIRA_API_TOKEN is not set for Jira ticket based dev-branch
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/4067","jira_ticket_url":"","branch_type":1}
