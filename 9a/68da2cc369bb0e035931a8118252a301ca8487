@@ -1,0 +1,1 @@
+Resolves issue 'qs pr fails if JIRA_API_TOKEN is not set for Jira ticket based dev-branch'
