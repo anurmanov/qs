@@ -1,3 +1,5 @@
 Resolves issue 'still prints my email twice on `qs pr` on Jira task'
 
 Resolves #4072 still prints my email twice on `qs pr` on Jira task
+
+{"version":"1.0","github_issue_url":"https://github.com/voedger/voedger/issues/4072","jira_ticket_url":"","branch_type":1}
