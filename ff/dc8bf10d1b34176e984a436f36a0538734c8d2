@@ -1,1 +1,3 @@
 {"version":"1.0","github_issue_url":"","jira_ticket_url":"https://untill.atlassian.net/browse/AIR-1901","branch_type":1}
+
+[AIR-1901] qs: [main.main:13]: error checking branch existence: failed to open cloned repository: repository does not exist
